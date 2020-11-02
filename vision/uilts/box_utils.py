@@ -36,7 +36,7 @@ def GenerateAnchor(feature_map_list,image_size,min_boxes,clamp=True,aspect_ratio
                             priors.append([center_x,center_y,ws2,hs2])
     priors=torch.tensor(priors)
     if clamp:
-        torch.clamp()
+        
                     
                             
 

@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "D:\\minianaconda\\envs\\pytorch\\python.exe",
+    "python.pythonPath": "F:\\anconda3\\envs\\rb_pytorch1.3\\python.exe",
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true
 }

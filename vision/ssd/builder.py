@@ -1,7 +1,6 @@
-from vision.nn.tinynet import TinyNet,SeperableConv2d
 import torch
 import torch.nn as nn
+from vision.nn.tinynet import classification_header,regression_header
+from vision.ssd.ssd import SSD
 
-def create_tiny_fd(num_class,is_training=False,device='cpu'):
-    base_model=TinyNet(2)
-    base_model_net=base_model.model
+

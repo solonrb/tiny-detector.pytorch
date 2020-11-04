@@ -36,8 +36,31 @@ def GenerateAnchor(feature_map_list,image_size,min_boxes,clamp=True,aspect_ratio
                             priors.append([center_x,center_y,ws2,hs2])
     priors=torch.tensor(priors)
     if clamp:
-        torch.clamp(priors,min=0.0,max=1.0,out=priors)
+        priors=torch.clamp(priors,min=0.0,max=1.0)
     return priors
+
+def area_of(left_up,bottom_down)->torch.Tensor:
+    wh=torch.clamp(bottom_down-left_up,min=0.0)
+    return wh[...,0]*wh[...,1]
+def iou(boxes1,boxes2,eps=1e-5)->torch.Tensor:
+    '''
+    cal iou of two boxes
+    Args:
+        boxes1:
+        boxes2:
+        eps:
+
+    Returns:
+        torch.Tensor
+    '''
+    overlap_top_left=torch.max(boxes1[...,:2],boxes2[...,:2])
+    overlap_right_bottom=torch.min(boxes1[...,2:],boxes2[...,2:])
+    area_overlap=area_of(overlap_top_left,overlap_right_bottom)
+    area_boxes1=area_of(boxes1[...,:2],boxes1[...,2:])
+    area_boxes2=area_of(boxes2[...,:2],boxes2[...,2:])
+    iou=area_overlap/(area_boxes1+area_boxes2-area_overlap+eps)
+    return iou
+
 
                     
                             

@@ -65,18 +65,35 @@ class SSD(nn.Module):
         self.extra_layer.apply(self.init_func)
         self.regression_header.apply(self.init_func)
         self.classification_header.apply(self.init_func)
+    def load(self,model_path):
+        self.load_state_dict(torch.load(model_path,map_location=lambda storage,loc:storage),strict=True)
+    def save(self,save_path):
+        torch.save(self.state_dict(),save_path)
 
 class Anchor(object):
-    def __init__(self,priors,center_variance,size_variance,iou_threshold):
-        self.priors=priors  #  (x,y,w,h)
+    def __init__(self,config):
+        self.config=config
+        self.priors=self.generate
         self.corner_from_priors=self.center_from_to_corner(self.priors)
-        self.center_variance=center_variance
-        self.size_variance=size_variance
-        self.iou_threshold=iou_threshold
+        self.center_variance=self.config.center_variance
+        self.size_variance=self.config.size_variance
+        self.iou_threshold=self.config.iou_threshold
+    @property
+    def generate(self)->torch.Tensor:
+        '''
+        make anchors
+        Returns:
+            torch.Tensor
+        '''
+        anchors=box_utils.GenerateAnchor(self.config.feature_map_list,self.config.image_size,self.config.min_boxes,
+                                         aspect_ratio=self.config.aspect_ratio)
+        return anchors
     def center_from_to_corner(self,center_from_priors)->torch.Tensor:
-        return torch.cat([center_from_priors[...,:2]-center_from_priors[...,2:]/2,center_from_priors[...,:2]+center_from_priors[...,2:]/2],dim=center_from_priors.dim()-1)
+        return torch.cat([center_from_priors[...,:2]-center_from_priors[...,2:]/2,
+                          center_from_priors[...,:2]+center_from_priors[...,2:]/2],dim=center_from_priors.dim()-1)
     def corner_from_to_center(self,corner_from_priors)->torch.Tensor:
-        return torch.cat([(corner_from_priors[...,:2]+corner_from_priors[...,2:])/2,corner_from_priors[...,2:]-corner_from_priors[...,:2]],dim=corner_from_priors.dim()-1)
+        return torch.cat([(corner_from_priors[...,:2]+corner_from_priors[...,2:])/2,
+                          corner_from_priors[...,2:]-corner_from_priors[...,:2]],dim=corner_from_priors.dim()-1)
     def encode(self,gt_boxes,gt_labels)->tuple(torch.Tensor,torch.Tensor):
         '''
         function decode gt boxes into train format
@@ -108,7 +125,7 @@ class Anchor(object):
         locations=self.boxes_from_to_locations(center_form_boxes,self.priors)
         # convert boxes to locations
         return locations,labels
-    def boxes_from_to_locations(self,boxes,center_from_priors,size_variance,center_variance)->torch.Tensor:
+    def boxes_from_to_locations(self,center_from_boxes)->torch.Tensor:
         '''
         convert center_box to location
         Args:
@@ -120,15 +137,36 @@ class Anchor(object):
             locations
             torch.Tensor
         '''
-        if boxes.dim()==(center_from_priors.dim()+1):
-            center_from_priors=center_from_priors.unsqueeze(0)
+        if center_from_boxes.dim()==(self.priors.dim()+1):
+            center_from_priors=self.priors.unsqueeze(0)
+        else:
+            center_from_priors=self.priors
         return torch.cat([
-            (boxes[...,:2]-center_from_priors[...,:2])/center_from_priors[...,2:]/center_variance,
-            torch.log(boxes[...,2:]/center_from_priors[...,2:])/size_variance
-        ],dim=boxes.dim()-1)
-    def decode(self,prediction):
+            (center_from_boxes[...,:2]-center_from_priors[...,:2])/center_from_priors[...,2:]/self.center_variance,
+            torch.log(center_from_boxes[...,2:]/center_from_priors[...,2:])/self.size_variance
+        ],dim=center_from_boxes.dim()-1)
+    def locations_from_to_boxes(self,predictions)->torch.Tensor:
+        '''
+        convert prediction location to boxes
+        Args:
+            predictions: torch.Tensor ---->[n,num_priors,4]
 
-        pass
+        Returns:
+            torch.Tensor
+            boxes ----->[n.num_priors,4]
+        '''
+        if (self.priors.dim()+1)==predictions.dim():
+            priors=self.priors.unsqueeze(0)
+        else:
+            priors=self.priors
+        return torch.cat([
+            predictions[...,:2]*self.center_variance*priors[...,2:]+priors[...,:2],
+            torch.exp(predictions[...,2:]*self.size_variance)*priors[...,2:]
+        ],dim=predictions.dim()-1)
+
+
+
+
 
 
 

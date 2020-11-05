@@ -60,6 +60,26 @@ def iou(boxes1,boxes2,eps=1e-5)->torch.Tensor:
     area_boxes2=area_of(boxes2[...,:2],boxes2[...,2:])
     iou=area_overlap/(area_boxes1+area_boxes2-area_overlap+eps)
     return iou
+def nms(boxes_scores,threshold):
+    '''
+    Args:
+        boxes_scores:
+        threshold:
+
+    Returns:
+    '''
+    pass
+def soft_nms(boxes_scores,score_threshold,iou_threshold,top_k=-1):
+    '''
+    implementation of soft_nms
+    Args:
+        boxes_scores:
+        score_threshold:
+        iou_threshold:
+    Returns:
+        top_k boxes
+    '''
+
 
 
                     

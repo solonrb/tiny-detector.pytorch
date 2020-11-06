@@ -60,15 +60,40 @@ def iou(boxes1,boxes2,eps=1e-5)->torch.Tensor:
     area_boxes2=area_of(boxes2[...,:2],boxes2[...,2:])
     iou=area_overlap/(area_boxes1+area_boxes2-area_overlap+eps)
     return iou
-def nms(boxes_scores,threshold):
+def nms(boxes_scores,threshold,top_k=-1,truncated_num=200):
     '''
-    Args:
-        boxes_scores:
-        threshold:
 
+    Args:
+       boxes_scores: shape of [N,5]--->(x,y,w,h,s)
+       threshold: iou-threshold
+       top_k: return the result truncated with k numbers
+       truncated_num: select truncated number boxes for nms
     Returns:
+        select boxes_scores [n,5]
     '''
-    pass
+    boxes=boxes_scores[...,:4]
+    scores=boxes_scores[...,4:]
+    # 降序排序
+    _,sorted_index=scores.sort(descending=True)
+    sorted_index=sorted_index[:truncated_num]
+    keep=[]
+    while sorted_index.numel()>0:
+        if sorted_index.numel()==1:
+            keep.append(sorted_index[0].item())
+            break
+        else:
+            current=sorted_index[0]
+            keep.append(current.item())
+            current_box=boxes[current,:]
+            sorted_index=sorted_index[1:]
+            reset_boxes=boxes_scores[sorted_index,:]
+            # 计算iou
+            c_iou_scores=iou(reset_boxes,current_box.unsqueeze(0))
+            # 根据iou挑选该留待下轮迭代的框的index
+            sorted_index=sorted_index[c_iou_scores<threshold]
+    if top_k:
+        keep=keep[:top_k]
+    return boxes_scores[keep,:]
 def soft_nms(boxes_scores,score_threshold,iou_threshold,top_k=-1):
     '''
     implementation of soft_nms
@@ -79,6 +104,7 @@ def soft_nms(boxes_scores,score_threshold,iou_threshold,top_k=-1):
     Returns:
         top_k boxes
     '''
+
 
 
 

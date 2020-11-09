@@ -94,16 +94,42 @@ def nms(boxes_scores,threshold,top_k=-1,truncated_num=200):
     if top_k:
         keep=keep[:top_k]
     return boxes_scores[keep,:]
-def soft_nms(boxes_scores,score_threshold,iou_threshold,top_k=-1):
+def soft_nms(boxes_scores,score_threshold,simga=0.5):
     '''
-    implementation of soft_nms
+    implementation of soft-nms
     Args:
-        boxes_scores:
-        score_threshold:
-        iou_threshold:
+        boxes_scores: shape of [n,5]--->(x,y,w,h,s)
+        score_threshold: score threshold
+        simga: scores[i] = scores[i] * exp(-(iou_i)^2 / simga)
     Returns:
-        top_k boxes
+        boxes-scores list or tensor
     '''
+    picked_boxes_scores=[]
+    while boxes_scores.numel()>0:
+        if boxes_scores.numel()==1:
+            picked_boxes_scores.append(boxes_scores[0])
+        else:
+            _,max_score_index=boxes_scores[:,-1].sort(decrending=True)
+            max_boxes_scores=boxes_scores[max_score_index[0],:]
+            picked_boxes_scores.append(max_boxes_scores)
+            current_box=max_boxes_scores[:,:-1]
+            boxes_scores[max_score_index[0],:]=boxes_scores[-1,:]
+            #将得分最大框从集合中去掉 首尾赋值
+            boxes_scores=boxes_scores[:-1,:]
+            reset_boxes=boxes_scores[:,:-1]
+            c_iou=iou(reset_boxes,current_box)
+            boxes_scores[:,-1]=boxes_scores[:,-1]*torch.exp(-torch.pow(c_iou,2)/simga)
+            mask=boxes_scores[:,-1]>score_threshold
+            boxes_scores=boxes_scores[mask,:]
+    if len(picked_boxes_scores)>0:
+        return torch.stack(picked_boxes_scores)
+    else:
+        return torch.tensor([])
+
+def hard_negative_mining():
+    pass
+
+
 
 
 

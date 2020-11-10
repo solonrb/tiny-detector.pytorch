@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 class TinyNet(nn.Module):
     def __init__(self,num_class):
@@ -21,7 +22,7 @@ class TinyNet(nn.Module):
                 nn.BatchNorm2d(out_channels),
                 nn.ReLU(inplace=True) 
             )
-         self.model = nn.Sequential(
+        self.model = nn.Sequential(
             conv_bn(3, self.base_channel, 2),  # 160*120
             conv_dw(self.base_channel, self.base_channel * 2, 1),
             conv_dw(self.base_channel * 2, self.base_channel * 2, 2),  # 80*60
@@ -36,7 +37,7 @@ class TinyNet(nn.Module):
             conv_dw(self.base_channel * 8, self.base_channel * 16, 2),  # 10*8
             conv_dw(self.base_channel * 16, self.base_channel * 16, 1)
         )
-        self.fc = nn.Linear(1024, num_classes)
+        self.fc = nn.Linear(1024, self.num_classes)
 
     def forward(self,x):
         x = self.model(x)
@@ -49,7 +50,7 @@ class TinyNet(nn.Module):
 
 def SeperableConv2d(in_channels,out_channels,kernel_size=1,stride=1,padding=0):
     return nn.Sequential(
-        nn.Conv2d(in_channels,in_channels,kernel_size,stride,padding=padding,groups=in_channels)
+        nn.Conv2d(in_channels,in_channels,kernel_size,stride,padding=padding,groups=in_channels),
         nn.ReLU(inplace=True),
         nn.Conv2d(in_channels,out_channels,1,1,padding=0),
     )

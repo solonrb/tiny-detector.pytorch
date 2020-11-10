@@ -126,8 +126,27 @@ def soft_nms(boxes_scores,score_threshold,simga=0.5):
     else:
         return torch.tensor([])
 
-def hard_negative_mining():
-    pass
+def hard_negative_mining(loss,pos_negative_ratio,labels):
+    '''
+    针对每个样本的难样本挖掘
+    Args:
+        loss:
+        pos_negative_ratio:
+        labels:
+
+    Returns:
+
+    '''
+    pos_mask=labels>0
+    pos_num=pos_mask.long().sum(dim=1,keepdim=True)
+    num_neg=pos_num*pos_negative_ratio
+    loss[pos_mask]=-math.inf
+    _,index=loss.sort(dim=1,decrending=True)
+    _,order=index.sort(dim=1)
+    neg_mask=order<num_neg
+    return pos_mask | neg_mask
+
+
 
 
 

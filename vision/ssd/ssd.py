@@ -75,9 +75,9 @@ class Anchor(object):
         self.config=config
         self.priors=self.generate
         self.corner_from_priors=self.center_from_to_corner(self.priors)
-        self.center_variance=self.config.center_variance
-        self.size_variance=self.config.size_variance
-        self.iou_threshold=self.config.iou_threshold
+        self.center_variance=self.config.NMS_config.center_variance
+        self.size_variance=self.config.NMS_config.size_variance
+        self.iou_threshold=self.config.NMS_config.iou_threshold
     @property
     def generate(self)->torch.Tensor:
         '''

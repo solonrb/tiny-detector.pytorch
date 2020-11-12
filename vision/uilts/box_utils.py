@@ -30,8 +30,8 @@ def GenerateAnchor(feature_map_list,image_size,min_boxes,clamp=True,aspect_ratio
                         for ratio in aspect_ratio[index]:
                             ws=wh*math.sqrt(ratio)/image_size[0]
                             hs=wh/math.sqrt(ratio)/image_size[1]
-                            ws2=wh/math.sqrt(ratio)/image_size[1]
-                            hs2=wh*math.sqrt(ratio)/image_size[0]
+                            ws2=wh/math.sqrt(ratio)/image_size[0]
+                            hs2=wh*math.sqrt(ratio)/image_size[1]
                             priors.append([center_x,center_y,ws,hs])
                             priors.append([center_x,center_y,ws2,hs2])
     priors=torch.tensor(priors)
@@ -109,7 +109,7 @@ def soft_nms(boxes_scores,score_threshold,simga=0.5):
         if boxes_scores.numel()==1:
             picked_boxes_scores.append(boxes_scores[0])
         else:
-            _,max_score_index=boxes_scores[:,-1].sort(decrending=True)
+            _,max_score_index=boxes_scores[:,-1].sort(descending=True)
             max_boxes_scores=boxes_scores[max_score_index[0],:]
             picked_boxes_scores.append(max_boxes_scores)
             current_box=max_boxes_scores[:,:-1]

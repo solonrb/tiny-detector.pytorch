@@ -54,12 +54,3 @@ def SeperableConv2d(in_channels,out_channels,kernel_size=1,stride=1,padding=0):
         nn.ReLU(inplace=True),
         nn.Conv2d(in_channels,out_channels,1,1,padding=0),
     )
-
-
-def classification_header(num_priors,num_class,in_channels,kernel_size=3,stride=1,padding=1):
-    return SeperableConv2d(in_channels,num_priors*num_class,kernel_size,stride,padding)
-
-
-    
-def regression_header(num_priors,num_points,in_channels,kernel_size=3,stride=1,padding=1):
-    return SeperableConv2d(in_channels,num_priors*num_points,kernel_size,stride,padding)
